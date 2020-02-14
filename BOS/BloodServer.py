@@ -5,12 +5,13 @@ import shutil
 
 import requests
 
-import Data
+from BOS import Data
 
 if os.getenv("TEST_H") is None:
     HOST = Data.HOST
 else:
-    # https://122.147.48.137/
+    # Add this into environment variable.
+    # TEST_H=https://122.147.48.137/
     HOST = os.getenv("TEST_H")
 
 
@@ -162,7 +163,7 @@ class BloodServer:
 
         return response
 
-    def download_edi(self, order_number):
+    def download_edi(self, order_number, path=Data.PATH):
         """
         Download EDI file
         """
@@ -172,8 +173,8 @@ class BloodServer:
         with open(f"{order_number}.txt", "w") as f:
             f.write(response.text)
 
-        open(os.path.join(Data.PATH, f"{order_number}.txt"), "a").close()
-        shutil.move(f"{order_number}.txt", os.path.join(Data.PATH, f"{order_number}.txt"))
+        open(os.path.join(path, f"{order_number}.txt"), "a").close()
+        shutil.move(f"{order_number}.txt", os.path.join(path, f"{order_number}.txt"))
 
     @classmethod
     def validate_patient_data(cls, patient):
