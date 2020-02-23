@@ -163,7 +163,7 @@ class BloodServer:
 
         return response
 
-    def download_edi(self, order_number, path=Data.PATH):
+    def download_edi(self, order_number, path="."):
         """
         Download EDI file
         """
