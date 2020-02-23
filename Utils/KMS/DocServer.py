@@ -4,6 +4,8 @@ import os
 import requests
 from bs4 import BeautifulSoup
 
+from Utils.KMS.Document import Document
+
 HOST = "http://kms.hosp.ncku.edu.tw"
 
 CODE = {0: "Success", 404: "Failed"}
@@ -11,6 +13,8 @@ CODE = {0: "Success", 404: "Failed"}
 
 class DocServer:
     _login = HOST + "/KM/login.aspx"
+    _logout = HOST + "/KM/logout.aspx"
+    _doc = HOST + "/KM/readdocument.aspx"
 
     def __init__(self):
         self.user_data = {}
@@ -42,7 +46,32 @@ class DocServer:
 
         return 0
 
-    def download_doc_url(self, url):
+    def logout(self):
+        self.response = self.session.get(self._logout)
+        soup = self.get_soup()
+
+        if soup.find("a", {"href": "/KM/logout.aspx"}) is None:
+            return 404
+
+        return 0
+
+    def read_doc(self, doc_id):
+        """
+        Get document information
+        :param doc_id:
+        :return: Document
+        """
+        link = self._doc + f"?documentId={doc_id}"
+        self.response = self.session.get(link)
+
+        soup = self.get_soup()
+        if soup.find("div", {"class": "errorMessage"}) is not None:
+            return None  # TODO raise Exception here
+
+        doc = Document(doc_id, soup)
+        return doc
+
+    def download_view_url(self, url):
         """
         Download pdf from online pdf viewer
         """
@@ -76,8 +105,7 @@ if __name__ == "__main__":
 
     if result != 0:
         print("Login not success!")
-        exit()
 
-    with open("download_urls.txt", "r") as f:
-        for url in f.readlines():
-            server.download_doc_url(url)
+    # with open("download_urls.txt", "r") as f:
+    #     for url in f.readlines():
+    #         server.download_view_url(url)
