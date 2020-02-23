@@ -4,26 +4,28 @@ class Document:
         self._soup = soup
         self.files = {}
 
-    def get_files(self):
+    def load_files(self):
+        """
+        Get files download link.
+        """
         files = self._soup.find_all("div", {"class": "documentmode-file-title"})
 
         for f in files:
             size_text = f.find("span")
             size_text.extract()
 
-            self.files[f.get_text().strip()] = ""
+            f_name = f.get_text.strip()
+            link = self._soup.find("a", {"title": f_name + " "})
+
+            self.files[f_name] = link
 
     def get_latest_version(self):
-        pass
+        ver = self._soup.find("span", {"id": "ctl00_cp_latestVersion"})
 
-    def download_files(self):
-        pass
+        if ver is None:
+            return 1
 
-    def downloadable(self):
-        pass
-
-    def viewable(self):
-        pass
+        return ver
 
     def download_files(self):
         pass
