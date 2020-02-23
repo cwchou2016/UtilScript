@@ -5,7 +5,7 @@ import shutil
 
 import requests
 
-from BOS import Data
+from Utils.BOS import Data
 
 if os.getenv("TEST_H") is None:
     HOST = Data.HOST

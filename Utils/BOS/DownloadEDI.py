@@ -1,6 +1,6 @@
 import getpass
 
-from BOS.BloodServer import BloodServer
+from Utils.BOS import BloodServer
 
 edi = []
 
