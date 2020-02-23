@@ -132,3 +132,6 @@ dmypy.json
 
 # Data files
 EDI.txt
+
+#other
+test
