@@ -4,7 +4,7 @@ import os
 import requests
 from bs4 import BeautifulSoup
 
-from Utils.KMS.Document import Document
+from .Document import Document
 
 HOST = "http://kms.hosp.ncku.edu.tw"
 
@@ -15,6 +15,7 @@ class DocServer:
     login_link = HOST + "/KM/login.aspx"
     logout_link = HOST + "/KM/logout.aspx"
     doc_link = HOST + "/KM/readdocument.aspx"
+    doc_view_link = HOST + "/KM/preview.aspx"
 
     def __init__(self):
         self._user_data = {}
@@ -55,7 +56,7 @@ class DocServer:
 
         return 0
 
-    def read_doc(self, doc_id):
+    def read_doc_by_id(self, doc_id):
         """
         Get document information
         :param doc_id:
@@ -68,7 +69,7 @@ class DocServer:
         if soup.find("div", {"class": "errorMessage"}) is not None:
             return None  # TODO raise Exception here
 
-        doc = Document(doc_id, soup)
+        doc = Document(soup)
         return doc
 
     def download_view_url(self, url):

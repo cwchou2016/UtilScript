@@ -1,1 +1,3 @@
-from Utils.KMS import DocServer
+from Utils.KMS import (
+    DocServer,
+    Document)
