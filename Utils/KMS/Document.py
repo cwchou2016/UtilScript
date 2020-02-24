@@ -8,21 +8,18 @@ class Document:
         :param soup: BeautifulSoup of document page.
         """
         self._doc_id = None
+        self._version = None
         self._soup = soup
         self.files = {}
-        self.load_doc()
 
-    def load_doc(self):
+        self.read_files()
+        self.read_doc_id()
+        self.read_version()
+
+    def read_files(self):
         """
-        Get document info.
+        read files of the document
         """
-
-        id_tag = self._soup.find("form", {"name": "aspnetForm"})
-
-        if id_tag is not None:
-            doc_id = id_tag.get("action").split("=")[1]
-            self._doc_id = doc_id
-
         files = self._soup.find_all("div", {"class": "documentmode-file-title"})
 
         for f in files:
@@ -37,16 +34,26 @@ class Document:
             else:
                 self.files[f_name] = DocServer.HOST + link.get("href")
 
-    def get_latest_version(self):
+    def read_doc_id(self):
         """
-        :return: The latest version number from the document page
+        Read document's id
+        """
+        id_tag = self._soup.find("form", {"name": "aspnetForm"})
+
+        if id_tag is not None:
+            doc_id = id_tag.get("action").split("=")[1]
+            self._doc_id = doc_id
+
+    def read_version(self):
+        """
+        Read the latest version number from the document page
         """
         ver = self._soup.find("span", {"id": "ctl00_cp_latestVersion"})
 
         if ver is None:
-            return 1
+            self._version = 1
 
-        return ver.get_text()
+        self._version = ver.get_text()
 
     def get_files_link(self):
         """
@@ -63,8 +70,11 @@ class Document:
         view_links = {}
         for f in self.files:
             view_links[f] = DocServer.DocServer.doc_view_link + \
-                            f"?documentid={self.get_id()}&ver={self.get_latest_version()}&filename={f}&type=file"
+                            f"?documentid={self.get_id()}&ver={self.get_version()}&filename={f}&type=file"
         return view_links
 
     def get_id(self):
         return self._doc_id
+
+    def get_version(self):
+        return self._version
