@@ -12,14 +12,14 @@ CODE = {0: "Success", 404: "Failed"}
 
 
 class DocServer:
-    _login = HOST + "/KM/login.aspx"
-    _logout = HOST + "/KM/logout.aspx"
-    _doc = HOST + "/KM/readdocument.aspx"
+    login_link = HOST + "/KM/login.aspx"
+    logout_link = HOST + "/KM/logout.aspx"
+    doc_link = HOST + "/KM/readdocument.aspx"
 
     def __init__(self):
         self.user_data = {}
         self.session = requests.session()
-        self.response = self.session.get(self._login)
+        self.response = self.session.get(DocServer.login_link)
 
         soup = self.get_soup()
         self.user_data["__VIEWSTATE"] = soup.find('input', {'id': "__VIEWSTATE"}).get("value")
@@ -38,7 +38,7 @@ class DocServer:
         self.user_data['txtUserName'] = user
         self.user_data['txtPassword'] = password
 
-        self.response = self.session.post(self._login, data=self.user_data)
+        self.response = self.session.post(DocServer.login_link, data=self.user_data)
         soup = self.get_soup()
 
         if soup.find("a", {"href": "/KM/logout.aspx"}) is None:
@@ -47,7 +47,7 @@ class DocServer:
         return 0
 
     def logout(self):
-        self.response = self.session.get(self._logout)
+        self.response = self.session.get(DocServer.logout_link)
         soup = self.get_soup()
 
         if soup.find("a", {"href": "/KM/logout.aspx"}) is None:
@@ -61,7 +61,7 @@ class DocServer:
         :param doc_id:
         :return: Document
         """
-        link = self._doc + f"?documentId={doc_id}"
+        link = DocServer.doc_link + f"?documentId={doc_id}"
         self.response = self.session.get(link)
 
         soup = self.get_soup()
