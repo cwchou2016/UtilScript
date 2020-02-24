@@ -12,6 +12,9 @@ HOST = "http://kms.hosp.ncku.edu.tw/KM/"
 
 
 class DocServer:
+    """
+    Controlling KM website
+    """
     login_link = HOST + "login.aspx"
     logout_link = HOST + "logout.aspx"
     doc_link = HOST + "readdocument.aspx"
@@ -30,12 +33,10 @@ class DocServer:
         self._user_data["txtOpenIdUser"] = ""
 
     def get_soup(self):
+        """Get current soup content"""
         return BeautifulSoup(self._response.content, "html.parser")
 
     def login(self, user, password):
-        """
-        :return: int CODE
-        """
         self._user_data['txtUserName'] = user
         self._user_data['txtPassword'] = password
 
@@ -73,7 +74,7 @@ class DocServer:
 
     def download_view_url(self, url):
         """
-        Download pdf from online pdf viewer
+        Download image from online pdf viewer
         """
         self._response = self._session.get(url)
         soup = self.get_soup()
@@ -102,7 +103,7 @@ class DocServer:
     def download_file_url(self, f_name, url):
         """
         Download file
-        :param f_name: file name
+        :param f_name: file name to save
         :param url:  file link
         """
         content = self._session.get(url).content

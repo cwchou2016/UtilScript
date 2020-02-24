@@ -2,9 +2,13 @@ from Utils.KMS import DocServer
 
 
 class Document:
+    """
+    Load document information from BeatuifulSoup web page.
+
+    """
+
     def __init__(self, soup):
         """
-        :param doc_id:
         :param soup: BeautifulSoup of document page.
         """
         self._doc_id = None
@@ -18,7 +22,7 @@ class Document:
 
     def read_files(self):
         """
-        read files of the document
+        Read files of the document
         """
         files = self._soup.find_all("div", {"class": "documentmode-file-title"})
 
@@ -46,7 +50,7 @@ class Document:
 
     def read_version(self):
         """
-        Read the latest version number from the document page
+        Read the latest version number
         """
         ver = self._soup.find("span", {"id": "ctl00_cp_latestVersion"})
 
