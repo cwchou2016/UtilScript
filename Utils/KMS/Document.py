@@ -18,9 +18,10 @@ class Document:
         """
 
         id_tag = self._soup.find("form", {"name": "aspnetForm"})
-        doc_id = id_tag.get("action").split("=")[1]
 
-        self._doc_id = doc_id
+        if id_tag is not None:
+            doc_id = id_tag.get("action").split("=")[1]
+            self._doc_id = doc_id
 
         files = self._soup.find_all("div", {"class": "documentmode-file-title"})
 
@@ -34,7 +35,7 @@ class Document:
             if link is None:
                 self.files[f_name] = None
             else:
-                self.files[f_name] = link.get("href")
+                self.files[f_name] = DocServer.HOST + link.get("href")
 
     def get_latest_version(self):
         """
@@ -45,7 +46,7 @@ class Document:
         if ver is None:
             return 1
 
-        return ver
+        return ver.get_text()
 
     def get_files_link(self):
         """

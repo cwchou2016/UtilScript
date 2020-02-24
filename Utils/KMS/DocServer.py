@@ -1,21 +1,22 @@
 import getpass
 import os
+import shutil
 
 import requests
 from bs4 import BeautifulSoup
 
 from .Document import Document
 
-HOST = "http://kms.hosp.ncku.edu.tw"
+HOST = "http://kms.hosp.ncku.edu.tw/KM/"
 
 CODE = {0: "Success", 404: "Failed"}
 
 
 class DocServer:
-    login_link = HOST + "/KM/login.aspx"
-    logout_link = HOST + "/KM/logout.aspx"
-    doc_link = HOST + "/KM/readdocument.aspx"
-    doc_view_link = HOST + "/KM/preview.aspx"
+    login_link = HOST + "login.aspx"
+    logout_link = HOST + "logout.aspx"
+    doc_link = HOST + "readdocument.aspx"
+    doc_view_link = HOST + "preview.aspx"
 
     def __init__(self):
         self._user_data = {}
@@ -80,20 +81,35 @@ class DocServer:
         soup = self.get_soup()
 
         links = soup.find_all("a", {"class": "page-data-link"})
-        title = (str(soup.title.string).strip())
+        title = (str(soup.title.string).strip()).split(".")[0]
 
         print(os.getcwd(), title)
-        os.makedirs(f"export/{title}/")
+
+        try:
+            os.makedirs(f"export/{title}/")
+        except FileExistsError:
+            shutil.rmtree(f"export/{title}/")
+            os.makedirs(f"export/{title}/")
 
         page_number = 1
         for i in links:
             img_link = HOST + i.get("href")
 
-            content = server._session.get(img_link).content
+            content = self._session.get(img_link).content
 
             with open(f"export/{title}/{page_number:03}.jpg", "wb") as f:
                 f.write(content)
                 page_number += 1
+
+    def download_file_url(self, f_name, url):
+        """
+        Download file
+        :param f_name: file name
+        :param url:  file link
+        """
+        content = self._session.get(url).content
+        with open(f"export/{f_name}", "wb") as f:
+            f.write(content)
 
 
 if __name__ == "__main__":
