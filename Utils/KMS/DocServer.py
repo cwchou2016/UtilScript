@@ -17,28 +17,28 @@ class DocServer:
     doc_link = HOST + "/KM/readdocument.aspx"
 
     def __init__(self):
-        self.user_data = {}
-        self.session = requests.session()
-        self.response = self.session.get(DocServer.login_link)
+        self._user_data = {}
+        self._session = requests.session()
+        self._response = self._session.get(DocServer.login_link)
 
         soup = self.get_soup()
-        self.user_data["__VIEWSTATE"] = soup.find('input', {'id': "__VIEWSTATE"}).get("value")
-        self.user_data["__VIEWSTATEGENERATOR"] = soup.find('input', {'id': "__VIEWSTATEGENERATOR"}).get("value")
-        self.user_data["__EVENTVALIDATION"] = soup.find('input', {'id': "__EVENTVALIDATION"}).get("value")
-        self.user_data['LoginButton'] = soup.find('input', {'id': "LoginButton"}).get("value")
-        self.user_data["txtOpenIdUser"] = ""
+        self._user_data["__VIEWSTATE"] = soup.find('input', {'id': "__VIEWSTATE"}).get("value")
+        self._user_data["__VIEWSTATEGENERATOR"] = soup.find('input', {'id': "__VIEWSTATEGENERATOR"}).get("value")
+        self._user_data["__EVENTVALIDATION"] = soup.find('input', {'id': "__EVENTVALIDATION"}).get("value")
+        self._user_data['LoginButton'] = soup.find('input', {'id': "LoginButton"}).get("value")
+        self._user_data["txtOpenIdUser"] = ""
 
     def get_soup(self):
-        return BeautifulSoup(self.response.content, "html.parser")
+        return BeautifulSoup(self._response.content, "html.parser")
 
     def login(self, user, password):
         """
         :return: int CODE
         """
-        self.user_data['txtUserName'] = user
-        self.user_data['txtPassword'] = password
+        self._user_data['txtUserName'] = user
+        self._user_data['txtPassword'] = password
 
-        self.response = self.session.post(DocServer.login_link, data=self.user_data)
+        self._response = self._session.post(DocServer.login_link, data=self._user_data)
         soup = self.get_soup()
 
         if soup.find("a", {"href": "/KM/logout.aspx"}) is None:
@@ -47,7 +47,7 @@ class DocServer:
         return 0
 
     def logout(self):
-        self.response = self.session.get(DocServer.logout_link)
+        self._response = self._session.get(DocServer.logout_link)
         soup = self.get_soup()
 
         if soup.find("a", {"href": "/KM/logout.aspx"}) is None:
@@ -62,7 +62,7 @@ class DocServer:
         :return: Document
         """
         link = DocServer.doc_link + f"?documentId={doc_id}"
-        self.response = self.session.get(link)
+        self._response = self._session.get(link)
 
         soup = self.get_soup()
         if soup.find("div", {"class": "errorMessage"}) is not None:
@@ -75,7 +75,7 @@ class DocServer:
         """
         Download pdf from online pdf viewer
         """
-        self.response = self.session.get(url)
+        self._response = self._session.get(url)
         soup = self.get_soup()
 
         links = soup.find_all("a", {"class": "page-data-link"})
@@ -88,7 +88,7 @@ class DocServer:
         for i in links:
             img_link = HOST + i.get("href")
 
-            content = server.session.get(img_link).content
+            content = server._session.get(img_link).content
 
             with open(f"export/{title}/{page_number:03}.jpg", "wb") as f:
                 f.write(content)
