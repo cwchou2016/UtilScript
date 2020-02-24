@@ -5,11 +5,10 @@ import shutil
 import requests
 from bs4 import BeautifulSoup
 
+from .DocException import LoginFailedException, ReadDocException
 from .Document import Document
 
 HOST = "http://kms.hosp.ncku.edu.tw/KM/"
-
-CODE = {0: "Success", 404: "Failed"}
 
 
 class DocServer:
@@ -44,9 +43,7 @@ class DocServer:
         soup = self.get_soup()
 
         if soup.find("a", {"href": "/KM/logout.aspx"}) is None:
-            return 404
-
-        return 0
+            raise LoginFailedException
 
     def logout(self):
         self._response = self._session.get(DocServer.logout_link)
@@ -67,8 +64,9 @@ class DocServer:
         self._response = self._session.get(link)
 
         soup = self.get_soup()
-        if soup.find("div", {"class": "errorMessage"}) is not None:
-            return None  # TODO raise Exception here
+        error_msg = soup.find("div", {"class": "errorMessage"})
+        if error_msg is not None:
+            raise ReadDocException(error_msg.get_text().strip())
 
         doc = Document(soup)
         return doc
@@ -113,15 +111,11 @@ class DocServer:
 
 
 if __name__ == "__main__":
-
     user = input("User:")
     password = getpass.getpass()
 
     server = DocServer()
     result = server.login(user, password)
-
-    if result != 0:
-        print("Login not success!")
 
     # with open("download_urls.txt", "r") as f:
     #     for url in f.readlines():
