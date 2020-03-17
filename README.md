@@ -1,4 +1,4 @@
-# NCKUUtilScript
+# UtilScript
 
 
 ## Install
