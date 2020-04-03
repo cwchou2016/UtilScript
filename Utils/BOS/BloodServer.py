@@ -158,6 +158,16 @@ class BloodServer:
                                  verify=False)
         return response
 
+    def verify_edi(self, order_number):
+        r = self.query_order(order_number)
+        if r.json().get("responseData").get("totalCount") < 1:
+            return False
+
+        if self.check_edi(order_number).json().get("responseData").get("isCut"):
+            return False
+
+        return True
+
     def confirm_order(self, order_number):
         payload = f"pkAk={order_number}"
         self._headers['Content-Type'] = "application/x-www-form-urlencoded"
