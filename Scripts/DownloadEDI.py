@@ -15,6 +15,9 @@ bs = BloodServer()
 r = bs.login(user, password)
 
 for i in edi:
+    if not bs.verify_edi(i):
+        continue
+
     r = bs.confirm_order(i)
     print(r.text)
     bs.download_edi(i)
