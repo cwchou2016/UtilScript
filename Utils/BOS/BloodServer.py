@@ -34,6 +34,7 @@ class BloodServer:
     _checkEDI = HOST + "tbsf-api/bs/bldSupOrdMService/checkEDI"
     _confirmAPI = HOST + "tbsf-api/bs/bldSupOrdMService/confirm"
     _logoutAPI = HOST + "tbsf-api/logout"
+    _queryOrderList = HOST + "tbsf-api/bs/bldSupOrdMService/queryBldSupOrdMList"
 
     queryData = {
         "bldUserHistoryNo": "",
@@ -138,6 +139,23 @@ class BloodServer:
                                     data=payload,
                                     verify=False)
 
+        return response
+
+    def query_order(self, order_number) -> requests.Response:
+        payload = {
+            "bagNoType": "1",
+            "bldSupOrdNo": order_number,
+            "bldSupOrdShipDate": "",
+            "bldSupOrdStatus": "",
+            "iDisplayStart": "0",
+            "iDisplayLength": 10
+        }
+        self._headers['Content-Type'] = "application/x-www-form-urlencoded"
+
+        response = requests.post(self._queryOrderList,
+                                 headers=self._headers,
+                                 params=payload,
+                                 verify=False)
         return response
 
     def confirm_order(self, order_number):
