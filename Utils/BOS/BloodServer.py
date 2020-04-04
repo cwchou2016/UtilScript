@@ -116,7 +116,7 @@ class BloodServer:
         BloodServer.validate_patient_data(patient)
 
         patient = json.dumps(patient).strip(" ")
-        self._headers['content-type'] = "application/json"
+        self._headers['Content-Type'] = "application/json"
 
         response = requests.request("POST", self._savePatient,
                                     headers=self._headers,
@@ -158,9 +158,9 @@ class BloodServer:
                                  verify=False)
         return response
 
-    def verify_edi(self, order_number):
+    def verify_edi(self, order_number) -> bool:
         r = self.query_order(order_number)
-        if r.json().get("responseData").get("totalCount") < 1:
+        if r.json().get("responseData").get("totalCount") != 1:
             return False
 
         if self.check_edi(order_number).json().get("responseData").get("isCut"):
@@ -183,7 +183,7 @@ class BloodServer:
 
     def check_edi(self, order_number):
         payload = {'bldSupOrdNo': order_number}
-        self._headers['content-type'] = "application/json"
+        self._headers['Content-Type'] = "application/json"
         response = requests.post(self._checkEDI,
                                  headers=self._headers,
                                  data=json.dumps(payload),
