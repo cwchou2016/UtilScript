@@ -1,4 +1,9 @@
+import os
+import sys
 from getpass import getpass
+
+module = os.path.dirname(os.path.dirname(__file__))
+sys.path.append(module)
 
 from Utils.KMS.DocServer import DocServer
 

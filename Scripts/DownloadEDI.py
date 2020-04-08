@@ -1,5 +1,9 @@
 import getpass
 import os
+import sys
+
+module = os.path.dirname(os.path.dirname(__file__))
+sys.path.append(module)
 
 from Utils.BOS.BloodServer import BloodServer
 
