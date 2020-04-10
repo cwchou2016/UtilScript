@@ -35,6 +35,7 @@ class BloodServer:
     _confirmAPI = HOST + "tbsf-api/bs/bldSupOrdMService/confirm"
     _logoutAPI = HOST + "tbsf-api/logout"
     _queryOrderList = HOST + "tbsf-api/bs/bldSupOrdMService/queryBldSupOrdMList"
+    _checkToken = HOST + "tbsf-api/check_token"
 
     queryData = {
         "bldUserHistoryNo": "",
@@ -76,6 +77,11 @@ class BloodServer:
     def logout(self):
         data = {"access_token": self._token}
         response = requests.request("POST", self._logoutAPI, data=data, verify=False)
+        return response
+
+    def check_token(self) -> requests.Response:
+        data = {"access_token": self._token}
+        response = requests.post(self._checkToken, data=data, headers=self._headers)
         return response
 
     def query_patients_detail(self, ptid):
