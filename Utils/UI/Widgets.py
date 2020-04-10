@@ -3,7 +3,7 @@ import time
 import traceback
 
 from PyQt5 import QtWidgets
-from PyQt5.QtCore import pyqtSlot, QRunnable, QThreadPool, QObject, pyqtSignal, QMetaObject
+from PyQt5.QtCore import pyqtSlot, QRunnable, QThreadPool, QObject, pyqtSignal, QMetaObject, QThread
 from PyQt5.QtWidgets import QApplication, QWidget, QFileDialog, QTableWidgetItem, QAbstractItemView, QLabel, QLineEdit, \
     QPushButton, QVBoxLayout, QHBoxLayout, QDialog
 from PyQt5.uic import loadUi
@@ -36,6 +36,23 @@ class ValidateOrder(QRunnable):
         self.signal.validation.emit(self.row, "OK")
 
 
+class DownloadOrder(QThread):
+    edi_complete = pyqtSignal(int, str)
+    download_complete = pyqtSignal()
+
+    def __init__(self, edi_list):
+        super(DownloadOrder, self).__init__()
+        self._edi_list = edi_list
+        self._list_size = len(edi_list)
+
+    def run(self):
+        for idx in range(self._list_size):
+            time.sleep(1)
+            self.edi_complete.emit(idx, "Completed")
+
+        self.download_complete.emit()
+
+
 class EdiDownloadWidget(QDialog):
     def __init__(self, parent=None):
         super(EdiDownloadWidget, self).__init__(parent)
@@ -50,6 +67,22 @@ class EdiDownloadWidget(QDialog):
         self.btn_download.setEnabled(False)
 
         self.pool = QThreadPool()
+
+    @pyqtSlot()
+    def on_btn_download_clicked(self):
+        row_count = self.table_edi.rowCount()
+        to_download = []
+        for idx in range(row_count):
+            if self.table_edi.item(idx, 1).text() == "OK":
+                to_download.append(self.table_edi.item(idx, 0).text())
+
+        print(to_download)
+        self.thread = DownloadOrder(to_download)
+        self.thread.edi_complete.connect(self.update_download)
+        self.thread.start()
+
+    def update_download(self, row, msg):
+        self.table_edi.setItem(row, 2, QTableWidgetItem(msg))
 
     @pyqtSlot()
     def on_label_clicked(self):
