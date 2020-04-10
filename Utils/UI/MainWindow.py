@@ -2,7 +2,7 @@ import sys
 import traceback
 
 from PyQt5.QtCore import QObject, pyqtSlot
-from PyQt5.QtWidgets import QApplication, QDialog, QMainWindow
+from PyQt5.QtWidgets import QApplication, QDialog, QMainWindow, QFileDialog
 
 from Utils.UI.Widgets import LoginWidget, EdiDownloadWidget
 
@@ -26,11 +26,13 @@ class MainWindow(EdiDownloadWidget, QMainWindow):
         super(MainWindow, self).__init__()
         self.show()
         self._windows = LoginWindow(self)
-        self._windows.show()
+
+        self.line_path.setText("C:\\Blood")
 
     @pyqtSlot()
     def on_btn_dir_clicked(self):
-        pass
+        path = QFileDialog().getExistingDirectory()
+        self.line_path.setText(path)
 
     @pyqtSlot()
     def on_btn_add_clicked(self):
@@ -47,7 +49,7 @@ class LoginWindow(QDialog, LoginWidget):
 
     @pyqtSlot()
     def on_btn_login_clicked(self):
-        pass
+        self.close()
 
 
 if __name__ == "__main__":
