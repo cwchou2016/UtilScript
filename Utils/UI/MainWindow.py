@@ -38,6 +38,14 @@ class VerifyEDI(QRunnable):
         self.signals.verified.emit(self._row, str("OK"))
 
 
+class Login(QRunnable):
+    def __init__(self):
+        super(Login, self).__init__()
+
+    def run(self) -> None:
+        time.sleep(5)
+
+
 class MainWindow(EdiDownloadWidget, QMainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
@@ -107,6 +115,8 @@ class MainWindow(EdiDownloadWidget, QMainWindow):
 
     def connecting_start(self):
         self.btn_download.setEnabled(False)
+        login = Login()
+        self.pool.start(login)
 
     def connecting_complete(self):
         BServer.is_connecting = False
