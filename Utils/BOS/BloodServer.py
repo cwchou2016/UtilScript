@@ -34,6 +34,8 @@ class BloodServer:
     _checkEDI = HOST + "tbsf-api/bs/bldSupOrdMService/checkEDI"
     _confirmAPI = HOST + "tbsf-api/bs/bldSupOrdMService/confirm"
     _logoutAPI = HOST + "tbsf-api/logout"
+    _queryOrderList = HOST + "tbsf-api/bs/bldSupOrdMService/queryBldSupOrdMList"
+    _checkToken = HOST + "tbsf-api/check_token"
 
     queryData = {
         "bldUserHistoryNo": "",
@@ -77,6 +79,11 @@ class BloodServer:
         response = requests.request("POST", self._logoutAPI, data=data, verify=False)
         return response
 
+    def check_token(self) -> requests.Response:
+        data = {"access_token": self._token}
+        response = requests.post(self._checkToken, data=data, headers=self._headers)
+        return response
+
     def query_patients_detail(self, ptid):
         """
         search patient by patient's ID
@@ -115,7 +122,7 @@ class BloodServer:
         BloodServer.validate_patient_data(patient)
 
         patient = json.dumps(patient).strip(" ")
-        self._headers['content-type'] = "application/json"
+        self._headers['Content-Type'] = "application/json"
 
         response = requests.request("POST", self._savePatient,
                                     headers=self._headers,
@@ -140,6 +147,33 @@ class BloodServer:
 
         return response
 
+    def query_order(self, order_number) -> requests.Response:
+        payload = {
+            "bagNoType": "1",
+            "bldSupOrdNo": order_number,
+            "bldSupOrdShipDate": "",
+            "bldSupOrdStatus": "",
+            "iDisplayStart": "0",
+            "iDisplayLength": 10
+        }
+        self._headers['Content-Type'] = "application/x-www-form-urlencoded"
+
+        response = requests.post(self._queryOrderList,
+                                 headers=self._headers,
+                                 params=payload,
+                                 verify=False)
+        return response
+
+    def verify_edi(self, order_number) -> bool:
+        r = self.query_order(order_number)
+        if r.json().get("responseData").get("totalCount") != 1:
+            return False
+
+        if self.check_edi(order_number).json().get("responseData").get("isCut"):
+            return False
+
+        return True
+
     def confirm_order(self, order_number):
         payload = f"pkAk={order_number}"
         self._headers['Content-Type'] = "application/x-www-form-urlencoded"
@@ -155,7 +189,7 @@ class BloodServer:
 
     def check_edi(self, order_number):
         payload = {'bldSupOrdNo': order_number}
-        self._headers['content-type'] = "application/json"
+        self._headers['Content-Type'] = "application/json"
         response = requests.post(self._checkEDI,
                                  headers=self._headers,
                                  data=json.dumps(payload),
