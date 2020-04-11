@@ -14,6 +14,7 @@ class EdiDownloadWidget(QWidget):
         self.table_edi.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.table_edi.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         self.btn_download.setEnabled(False)
+        self.line_path.setReadOnly(True)
 
 
 class LoginWidget(QWidget):
