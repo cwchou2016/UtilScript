@@ -22,6 +22,7 @@ class BServer(QObject):
     verified = pyqtSignal(int, str)
     verify_start = pyqtSignal()
     verify_complete = pyqtSignal()
+    downloaded = pyqtSignal(int, str)
 
     is_connecting = False
 
@@ -44,6 +45,20 @@ class Login(QRunnable):
 
     def run(self) -> None:
         time.sleep(5)
+
+
+class DownloadEdi(QRunnable):
+    def __init__(self, edi_list: list):
+        super(DownloadEdi, self).__init__()
+        self.signals = BServer()
+        self._edi_list = edi_list
+        self._size = len(edi_list)
+
+    def run(self) -> None:
+        for idx in range(self._size):
+            time.sleep(2)
+            print(idx)
+            self.signals.downloaded.emit(idx, "Complete")
 
 
 class MainWindow(EdiDownloadWidget, QMainWindow):
@@ -95,7 +110,17 @@ class MainWindow(EdiDownloadWidget, QMainWindow):
 
     @pyqtSlot()
     def on_btn_download_clicked(self):
-        pass
+        print("download")
+        row_count = self.table_edi.rowCount()
+        to_download = []
+        for idx in range(row_count):
+            if self.table_edi.item(idx, 1).text() == "OK":
+                to_download.append(self.table_edi.item(idx, 0).text())
+
+        print(to_download)
+        download = DownloadEdi(to_download)
+        download.signals.downloaded.connect(self.update_download)
+        self.pool.start(download)
 
     @pyqtSlot()
     def on_v_label_clicked(self):
@@ -112,6 +137,9 @@ class MainWindow(EdiDownloadWidget, QMainWindow):
 
         self.server.verify_complete.emit()
         self.btn_download.setEnabled(True)
+
+    def update_download(self, row: int, msg: str):
+        self.table_edi.setItem(row, 2, QTableWidgetItem(msg))
 
     def connecting_start(self):
         self.btn_download.setEnabled(False)
