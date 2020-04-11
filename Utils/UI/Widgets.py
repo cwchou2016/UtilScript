@@ -12,7 +12,8 @@ class EdiDownloadWidget(QWidget):
         self.setWindowTitle("下載 EDI")
         self.table_edi.setSelectionMode(QAbstractItemView.NoSelection)
         self.table_edi.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        self.table_edi.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
+        self.table_edi.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
+        self.table_edi.horizontalHeader().setSectionResizeMode(2, QtWidgets.QHeaderView.Stretch)
         self.btn_download.setEnabled(False)
         self.line_path.setReadOnly(True)
 

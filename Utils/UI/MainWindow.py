@@ -1,6 +1,7 @@
 import sys
 import traceback
 
+from PyQt5 import QtGui
 from PyQt5.QtCore import QObject, pyqtSlot, pyqtSignal, QRunnable, QThreadPool
 from PyQt5.QtWidgets import QApplication, QDialog, QMainWindow, QFileDialog, QTableWidgetItem, QErrorMessage
 
@@ -74,8 +75,12 @@ class DownloadEDI(QRunnable):
             r = BServer.bs.confirm_order(self._edi_list[idx])
             print(r.text)
             if r.json().get("statusCode") == "900":
-                BServer.bs.download_edi(self._edi_list[idx], self._path)
-                self.signals.downloaded.emit(idx, "Complete")
+                try:
+                    BServer.bs.download_edi(self._edi_list[idx], self._path)
+                except Exception as e:
+                    self.signals.error_msg.emit(str(e))
+                else:
+                    self.signals.downloaded.emit(idx, "Complete")
             else:
                 self.signals.downloaded.emit(idx, "Error")
 
@@ -95,7 +100,7 @@ class MainWindow(EdiDownloadWidget, QMainWindow):
         self.show()
 
         self._windows = LoginWindow(self)
-        self._windows.show()
+        self._windows.exec()
 
         self.line_path.setText("C:\\Blood")
 
@@ -127,7 +132,6 @@ class MainWindow(EdiDownloadWidget, QMainWindow):
 
         edi = self.line_order.text()
         self.table_edi.setItem(row, 0, QTableWidgetItem(edi))
-        self.table_edi.resizeColumnsToContents()
         work = VerifyEDI(row, edi)
         work.signals.verified.connect(self.update_check)
         self.pool.start(work)
@@ -154,6 +158,7 @@ class MainWindow(EdiDownloadWidget, QMainWindow):
         download = DownloadEDI(to_download, self.line_path.text())
         download.signals.downloaded.connect(self.update_download)
         download.signals.download_complete.connect(self.connecting_complete)
+        download.signals.error_msg.connect(self._windows.on_login_error)
         self.pool.start(download)
 
     @pyqtSlot()
@@ -163,7 +168,6 @@ class MainWindow(EdiDownloadWidget, QMainWindow):
 
     def update_check(self, row: int, msg: str):
         self.table_edi.setItem(row, 1, QTableWidgetItem(msg))
-        self.table_edi.resizeColumnsToContents()
 
         row_count = self.table_edi.rowCount()
         for idx in range(row_count):
@@ -175,7 +179,6 @@ class MainWindow(EdiDownloadWidget, QMainWindow):
 
     def update_download(self, row: int, msg: str):
         self.table_edi.setItem(row, 2, QTableWidgetItem(msg))
-        self.table_edi.resizeColumnsToContents()
 
     def connecting_start(self):
         self.btn_download.setEnabled(False)
@@ -215,14 +218,17 @@ class LoginWindow(QDialog, LoginWidget):
         self.parent.update_user(user, pw)
         r = BServer.bs.logout()
         print(r.text)
-        self.close()
+        self.hide()
 
     def on_login_error(self, msg):
-        error = QErrorMessage()
+        error = QErrorMessage(self)
         error.showMessage(msg)
-        error.exec()
+        error.show()
 
         self.btn_login.setEnabled(True)
+
+    def closeEvent(self, a0: QtGui.QCloseEvent) -> None:
+        self.parent.close()
 
 
 if __name__ == "__main__":
