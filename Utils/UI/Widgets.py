@@ -12,6 +12,7 @@ class EdiDownloadWidget(QWidget):
         self.setWindowTitle("下載 EDI")
         self.table_edi.setSelectionMode(QAbstractItemView.NoSelection)
         self.table_edi.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.table_edi.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         self.btn_download.setEnabled(False)
 
 
@@ -46,6 +47,3 @@ class LoginWidget(QWidget):
         layout.addWidget(self.btn_login)
 
         QMetaObject.connectSlotsByName(self)
-
-
-

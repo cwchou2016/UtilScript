@@ -39,8 +39,10 @@ class VerifyEDI(QRunnable):
         self._row = row
 
     def run(self) -> None:
-        time.sleep(1)
-        self.signals.verified.emit(self._row, str("OK"))
+        if BServer.bs.verify_edi(self._edi):
+            self.signals.verified.emit(self._row, str("OK"))
+        else:
+            self.signals.verified.emit(self._row, str("Failed"))
 
 
 class Login(QRunnable):
@@ -118,6 +120,7 @@ class MainWindow(EdiDownloadWidget, QMainWindow):
 
         edi = self.line_order.text()
         self.table_edi.setItem(row, 0, QTableWidgetItem(edi))
+        self.table_edi.resizeColumnsToContents()
         work = VerifyEDI(row, edi)
         work.signals.verified.connect(self.update_check)
         self.pool.start(work)
@@ -146,6 +149,7 @@ class MainWindow(EdiDownloadWidget, QMainWindow):
 
     def update_check(self, row: int, msg: str):
         self.table_edi.setItem(row, 1, QTableWidgetItem(msg))
+        self.table_edi.resizeColumnsToContents()
 
         row_count = self.table_edi.rowCount()
         for idx in range(row_count):
@@ -157,6 +161,7 @@ class MainWindow(EdiDownloadWidget, QMainWindow):
 
     def update_download(self, row: int, msg: str):
         self.table_edi.setItem(row, 2, QTableWidgetItem(msg))
+        self.table_edi.resizeColumnsToContents()
 
     def connecting_start(self):
         self.btn_download.setEnabled(False)
@@ -165,7 +170,8 @@ class MainWindow(EdiDownloadWidget, QMainWindow):
 
     def connecting_complete(self):
         BServer.is_connecting = False
-        BServer.bs.logout()
+        r = BServer.bs.logout()
+        print(r.text)
 
     def update_user(self, user: str, pw: str):
         self.user = user
