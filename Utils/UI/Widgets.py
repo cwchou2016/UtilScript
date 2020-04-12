@@ -1,8 +1,12 @@
+import os
+
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import QMetaObject
 from PyQt5.QtWidgets import QAbstractItemView, QLabel, QLineEdit, \
     QPushButton, QVBoxLayout, QHBoxLayout, QWidget
 from PyQt5.uic import loadUi
+
+os.chdir(os.path.dirname(__file__))
 
 
 class EdiDownloadWidget(QWidget):

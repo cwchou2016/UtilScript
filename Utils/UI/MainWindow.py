@@ -198,7 +198,6 @@ class MainWindow(EdiDownloadWidget, QMainWindow):
 class LoginWindow(QDialog, LoginWidget):
     def __init__(self, parent=None):
         super(LoginWindow, self).__init__(parent)
-        self.parent = parent
 
     @pyqtSlot()
     def on_btn_login_clicked(self):
@@ -209,13 +208,13 @@ class LoginWindow(QDialog, LoginWidget):
         login = Login(user, pw)
         login.signals.login_success.connect(self.on_login_success)
         login.signals.error_msg.connect(self.on_login_error)
-        self.parent.pool.start(login)
+        self.parent().pool.start(login)
 
     def on_login_success(self):
         user = self.line_name.text()
         pw = self.line_pw.text()
 
-        self.parent.update_user(user, pw)
+        self.parent().update_user(user, pw)
         r = BServer.bs.logout()
         print(r.text)
         self.hide()
@@ -228,7 +227,7 @@ class LoginWindow(QDialog, LoginWidget):
         self.btn_login.setEnabled(True)
 
     def closeEvent(self, a0: QtGui.QCloseEvent) -> None:
-        self.parent.close()
+        sys.exit()
 
 
 if __name__ == "__main__":
