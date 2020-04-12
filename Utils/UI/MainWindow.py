@@ -52,8 +52,9 @@ class Download(QRunnable):
             try:
                 BServer.bs.download_edi(self._edi, self._path)
             except Exception as e:
+                self.signals.download_complete.emit()
                 self.signals.error_msg.emit(str(e))
-            finally:
+            else:
                 self.signals.downloaded.emit("Complete")
         else:
             self.signals.downloaded.emit("Error")
@@ -127,7 +128,7 @@ class MainWindow(EdiDownloadWidget, QMainWindow):
         path = self.line_path.text()
 
         for idx in range(row_count):
-            if self.table_edi.item(idx, 1).text() != "":
+            if self.table_edi.item(idx, 2).text() != "":
                 continue
 
             edi = self.table_edi.item(idx, 0).text()
@@ -135,7 +136,7 @@ class MainWindow(EdiDownloadWidget, QMainWindow):
             download.signals.verified.connect(self.table_edi.item(idx, 1).setText)
             download.signals.downloaded.connect(self.table_edi.item(idx, 2).setText)
             download.signals.download_complete.connect(self.is_downloaded)
-            download.signals.error_msg.connect(self._windows.on_login_error)
+            download.signals.error_msg.connect(self._windows.on_error)
             self.pool.start(download)
 
     @pyqtSlot()
@@ -196,7 +197,7 @@ class LoginWindow(QDialog, LoginWidget):
 
         login = Login(user, pw)
         login.signals.login_success.connect(self.on_login_success)
-        login.signals.error_msg.connect(self.on_login_error)
+        login.signals.error_msg.connect(self.on_error)
         self.parent().pool.start(login)
 
     def on_login_success(self):
@@ -208,7 +209,7 @@ class LoginWindow(QDialog, LoginWidget):
         print(r.text)
         self.hide()
 
-    def on_login_error(self, msg):
+    def on_error(self, msg):
         error = QErrorMessage(self)
         error.showMessage(msg)
         error.show()
