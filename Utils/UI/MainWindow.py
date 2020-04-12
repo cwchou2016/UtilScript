@@ -2,7 +2,7 @@ import sys
 import traceback
 
 from PyQt5 import QtGui
-from PyQt5.QtCore import QObject, pyqtSlot, pyqtSignal, QRunnable, QThreadPool
+from PyQt5.QtCore import QObject, pyqtSlot, pyqtSignal, QRunnable, QThreadPool, Qt
 from PyQt5.QtWidgets import QApplication, QDialog, QMainWindow, QFileDialog, QTableWidgetItem, QErrorMessage
 
 from Utils.BOS.BloodServer import BloodServer, LoginErrorException
@@ -20,30 +20,45 @@ sys.excepthook = exception_hook
 
 
 class BServer(QObject):
-    verified = pyqtSignal(int, str)
+    verified = pyqtSignal(str)
     connecting_start = pyqtSignal()
     connecting_complete = pyqtSignal()
-    downloaded = pyqtSignal(int, str)
+    downloaded = pyqtSignal(str)
     download_complete = pyqtSignal()
     login_success = pyqtSignal()
     error_msg = pyqtSignal(str)
 
-    is_connecting = False
     bs = BloodServer()
 
 
-class VerifyEDI(QRunnable):
-    def __init__(self, row: int, edi: str):
-        super(VerifyEDI, self).__init__()
+class Download(QRunnable):
+    def __init__(self, edi: str, path: str = ""):
+        super(Download, self).__init__()
         self.signals = BServer()
         self._edi = edi
-        self._row = row
+        self._path = path
 
     def run(self) -> None:
-        if BServer.bs.verify_edi(self._edi):
-            self.signals.verified.emit(self._row, str("OK"))
+        if not BServer.bs.verify_edi(self._edi):
+            self.signals.verified.emit("Failed")
+            self.signals.downloaded.emit("Pass")
+            self.signals.download_complete.emit()
+            return
+
+        self.signals.verified.emit("OK")
+
+        r = BServer.bs.confirm_order(self._edi)
+        if r.json().get("statusCode") == "900":
+            try:
+                BServer.bs.download_edi(self._edi, self._path)
+            except Exception as e:
+                self.signals.error_msg.emit(str(e))
+            finally:
+                self.signals.downloaded.emit("Complete")
         else:
-            self.signals.verified.emit(self._row, str("Failed"))
+            self.signals.downloaded.emit("Error")
+
+        self.signals.download_complete.emit()
 
 
 class Login(QRunnable):
@@ -62,31 +77,6 @@ class Login(QRunnable):
             self.signals.error_msg.emit("帳號或密碼錯誤")
 
 
-class DownloadEDI(QRunnable):
-    def __init__(self, edi_list: list, path: str = ""):
-        super(DownloadEDI, self).__init__()
-        self.signals = BServer()
-        self._edi_list = edi_list
-        self._size = len(edi_list)
-        self._path = path
-
-    def run(self) -> None:
-        for idx in range(self._size):
-            r = BServer.bs.confirm_order(self._edi_list[idx])
-            print(r.text)
-            if r.json().get("statusCode") == "900":
-                try:
-                    BServer.bs.download_edi(self._edi_list[idx], self._path)
-                except Exception as e:
-                    self.signals.error_msg.emit(str(e))
-                else:
-                    self.signals.downloaded.emit(idx, "Complete")
-            else:
-                self.signals.downloaded.emit(idx, "Error")
-
-        self.signals.download_complete.emit()
-
-
 class MainWindow(EdiDownloadWidget, QMainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
@@ -96,6 +86,7 @@ class MainWindow(EdiDownloadWidget, QMainWindow):
 
         self.user = ""
         self.pw = ""
+        self.btn_download.setText("下載 [F12]")
 
         self.show()
 
@@ -106,8 +97,6 @@ class MainWindow(EdiDownloadWidget, QMainWindow):
 
         self.line_order.returnPressed.connect(self.on_btn_add_clicked)
         self.table_edi.verticalHeader().sectionClicked.connect(self.on_v_label_clicked)
-        self.server.connecting_start.connect(self.connecting_start)
-        self.server.connecting_complete.connect(self.connecting_complete)
 
     @pyqtSlot()
     def on_btn_dir_clicked(self):
@@ -122,73 +111,72 @@ class MainWindow(EdiDownloadWidget, QMainWindow):
             self.line_order.setFocus()
             return
 
-        if not BServer.is_connecting:
-            BServer.is_connecting = True
-            self.server.connecting_start.emit()
-
-        row = self.table_edi.rowCount()
-        self.table_edi.insertRow(row)
-        self.table_edi.setVerticalHeaderItem(row, QTableWidgetItem("刪"))
-
         edi = self.line_order.text()
-        self.table_edi.setItem(row, 0, QTableWidgetItem(edi))
-        work = VerifyEDI(row, edi)
-        work.signals.verified.connect(self.update_check)
-        self.pool.start(work)
+        self.add_edi(edi)
 
         self.line_order.setText("")
         self.line_order.setFocus()
 
     @pyqtSlot()
     def on_btn_download_clicked(self):
-
-        if not BServer.is_connecting:
-            BServer.is_connecting = True
-            self.server.connecting_start.emit()
-
         row_count = self.table_edi.rowCount()
-        to_download = []
-        for idx in range(row_count):
-            if self.table_edi.item(idx, 1).text() == "OK":
-                to_download.append(self.table_edi.item(idx, 0).text())
-            else:
-                self.table_edi.setItem(idx, 2, QTableWidgetItem("pass"))
+        if row_count == 0:
+            return
 
-        print(to_download)
-        download = DownloadEDI(to_download, self.line_path.text())
-        download.signals.downloaded.connect(self.update_download)
-        download.signals.download_complete.connect(self.connecting_complete)
-        download.signals.error_msg.connect(self._windows.on_login_error)
-        self.pool.start(download)
+        self.connecting_start()
+        path = self.line_path.text()
+
+        for idx in range(row_count):
+            if self.table_edi.item(idx, 1).text() != "":
+                continue
+
+            edi = self.table_edi.item(idx, 0).text()
+            download = Download(edi, path)
+            download.signals.verified.connect(self.table_edi.item(idx, 1).setText)
+            download.signals.downloaded.connect(self.table_edi.item(idx, 2).setText)
+            download.signals.download_complete.connect(self.is_downloaded)
+            download.signals.error_msg.connect(self._windows.on_login_error)
+            self.pool.start(download)
 
     @pyqtSlot()
     def on_v_label_clicked(self):
         row = self.table_edi.currentRow()
         self.table_edi.removeRow(row)
 
-    def update_check(self, row: int, msg: str):
-        self.table_edi.setItem(row, 1, QTableWidgetItem(msg))
+    def add_edi(self, edi: str):
+        row = self.table_edi.rowCount()
+        self.table_edi.insertRow(row)
+        self.table_edi.setVerticalHeaderItem(row, QTableWidgetItem("刪"))
 
+        self.table_edi.setItem(row, 0, QTableWidgetItem(edi))
+        self.table_edi.setItem(row, 1, QTableWidgetItem())
+        self.table_edi.setItem(row, 2, QTableWidgetItem())
+
+    def is_downloaded(self):
         row_count = self.table_edi.rowCount()
         for idx in range(row_count):
-            if self.table_edi.item(idx, 1) is None:
+            if self.table_edi.item(idx, 2).text() == "":
                 return
 
-        self.server.connecting_complete.emit()
-        self.btn_download.setEnabled(True)
-
-    def update_download(self, row: int, msg: str):
-        self.table_edi.setItem(row, 2, QTableWidgetItem(msg))
+        self.connecting_complete()
 
     def connecting_start(self):
-        self.btn_download.setEnabled(False)
         login = Login(self.user, self.pw)
         self.pool.start(login)
+        self.btn_download.setEnabled(False)
+        self.btn_add.setEnabled(False)
+        self.line_order.setEnabled(False)
 
     def connecting_complete(self):
-        BServer.is_connecting = False
         r = BServer.bs.logout()
         print(r.text)
+        self.btn_download.setEnabled(True)
+        self.btn_add.setEnabled(True)
+        self.line_order.setEnabled(True)
+
+    def keyPressEvent(self, a0: QtGui.QKeyEvent) -> None:
+        if a0.key() == Qt.Key_F12:
+            self.on_btn_download_clicked()
 
     def update_user(self, user: str, pw: str):
         self.user = user
@@ -198,6 +186,7 @@ class MainWindow(EdiDownloadWidget, QMainWindow):
 class LoginWindow(QDialog, LoginWidget):
     def __init__(self, parent=None):
         super(LoginWindow, self).__init__(parent)
+        self.line_name.setFocus()
 
     @pyqtSlot()
     def on_btn_login_clicked(self):
