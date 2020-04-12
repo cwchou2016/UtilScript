@@ -3,7 +3,8 @@ import traceback
 
 from PyQt5 import QtGui
 from PyQt5.QtCore import QObject, pyqtSlot, pyqtSignal, QRunnable, QThreadPool, Qt
-from PyQt5.QtWidgets import QApplication, QDialog, QMainWindow, QFileDialog, QTableWidgetItem, QErrorMessage
+from PyQt5.QtWidgets import QApplication, QDialog, QMainWindow, QFileDialog, QTableWidgetItem, QErrorMessage, \
+    QVBoxLayout, QProgressBar
 
 from Utils.BOS.BloodServer import BloodServer, LoginErrorException
 from Utils.UI.Widgets import LoginWidget, EdiDownloadWidget
@@ -93,6 +94,7 @@ class MainWindow(EdiDownloadWidget, QMainWindow):
 
         self._windows = LoginWindow(self)
         self._windows.exec()
+        self._downloading = DownloadingDialog(self)
 
         self.line_path.setText("C:\\Blood")
 
@@ -139,6 +141,8 @@ class MainWindow(EdiDownloadWidget, QMainWindow):
             download.signals.error_msg.connect(self._windows.on_error)
             self.pool.start(download)
 
+        self.is_downloaded()
+
     @pyqtSlot()
     def on_v_label_clicked(self):
         row = self.table_edi.currentRow()
@@ -157,11 +161,14 @@ class MainWindow(EdiDownloadWidget, QMainWindow):
         row_count = self.table_edi.rowCount()
         for idx in range(row_count):
             if self.table_edi.item(idx, 2).text() == "":
+                self._downloading.progress_bar.setValue((idx / row_count) * 100)
                 return
 
         self.connecting_complete()
 
     def connecting_start(self):
+        self._downloading.progress_bar.setValue(0)
+        self._downloading.show()
         login = Login(self.user, self.pw)
         self.pool.start(login)
         self.btn_download.setEnabled(False)
@@ -174,6 +181,7 @@ class MainWindow(EdiDownloadWidget, QMainWindow):
         self.btn_download.setEnabled(True)
         self.btn_add.setEnabled(True)
         self.line_order.setEnabled(True)
+        self._downloading.close()
 
     def keyPressEvent(self, a0: QtGui.QKeyEvent) -> None:
         if a0.key() == Qt.Key_F12:
@@ -218,6 +226,19 @@ class LoginWindow(QDialog, LoginWidget):
 
     def closeEvent(self, a0: QtGui.QCloseEvent) -> None:
         sys.exit()
+
+
+class DownloadingDialog(QDialog):
+    def __init__(self, parent=None):
+        super(DownloadingDialog, self).__init__(parent)
+        self.setWindowTitle("下載中...")
+        flag = Qt.WindowFlags(Qt.FramelessWindowHint | Qt.Tool)
+        self.setWindowFlags(flag)
+        layout = QVBoxLayout(self)
+        self.setLayout(layout)
+
+        self.progress_bar = QProgressBar()
+        layout.addWidget(self.progress_bar)
 
 
 if __name__ == "__main__":
