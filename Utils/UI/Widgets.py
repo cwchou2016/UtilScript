@@ -31,6 +31,8 @@ class LoginWidget(QWidget):
         layout_pw = QHBoxLayout()
         self.setLayout(layout)
 
+        self.label_url = QLabel("url")
+
         self.label_name = QLabel("帳號")
         self.label_pw = QLabel("密碼")
 
@@ -47,6 +49,7 @@ class LoginWidget(QWidget):
         layout_pw.addWidget(self.label_pw)
         layout_pw.addWidget(self.line_pw)
 
+        layout.addWidget(self.label_url)
         layout.addLayout(layout_user, 0)
         layout.addLayout(layout_pw, 0)
         layout.addWidget(self.btn_login)

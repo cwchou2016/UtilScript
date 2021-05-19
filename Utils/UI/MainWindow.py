@@ -42,7 +42,7 @@ class Download(QRunnable):
     def run(self) -> None:
         if not BServer.bs.verify_edi(self._edi):
             self.signals.verified.emit("Failed")
-            self.signals.downloaded.emit("Pass")
+            self.signals.downloaded.emit("Skipped")
             self.signals.download_complete.emit()
             return
 
@@ -195,6 +195,7 @@ class MainWindow(EdiDownloadWidget, QMainWindow):
 class LoginWindow(QDialog, LoginWidget):
     def __init__(self, parent=None):
         super(LoginWindow, self).__init__(parent)
+        self.label_url.setText(BloodServer.Host)
         self.line_name.setFocus()
 
     @pyqtSlot()

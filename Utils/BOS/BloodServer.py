@@ -24,6 +24,7 @@ class LoginErrorException(Exception):
 
 
 class BloodServer:
+    Host = HOST
     _loginAPI = HOST + "tbsf-api/login"
     _queryPatientDetail = HOST + "tbsf-api/bs/patientsDetailService/queryPatientsDetail"
     _queryPatientDetailInfo = HOST + "tbsf-api/bs/patientsDetailService/queryPatientsDetailInfo"
