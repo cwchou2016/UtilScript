@@ -19,7 +19,14 @@ def convert2pdf(files_list):
 
 
 if __name__ == "__main__":
-    path = "D:/UserData/Google Drive/NCKUH/實驗室安全/工作區/防災演習/檢點表/"
+    from tkinter import Tk, filedialog
+
+    tk = Tk()
+    tk.withdraw()
+    path = filedialog.askdirectory() + "/"
+
+    print(path)
+ 
     export_folder_name = "export"
 
     try:
