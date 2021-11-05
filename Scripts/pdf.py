@@ -1,15 +1,16 @@
-from os import walk, mkdir
+from os import walk, mkdir, path
 
 from docx2pdf import convert
 
 
-def get_files(path):
+def get_files(f_path):
     docx_files = []
-    for fs in walk(path):
+    for fs in walk(f_path):
         for f in fs[2]:
-            fname, fext = f.split(".")
-            if fext == "docx":
-                docx_files.append((path + f, path + "export/" + fname + ".pdf"))
+            fname, fext = path.splitext(f)
+            if fext == ".docx":
+                docx_files.append((f"{f_path}{f}", f"{f_path}export/{fname}.pdf"))
+
     return docx_files
 
 
@@ -19,22 +20,17 @@ def convert2pdf(files_list):
 
 
 if __name__ == "__main__":
-    from tkinter import Tk, filedialog
-
-    tk = Tk()
-    tk.withdraw()
-    path = filedialog.askdirectory() + "/"
-
-    print(path)
- 
+    f_path = "G:/我的雲端硬碟/工作區/118/附件/"
     export_folder_name = "export"
 
     try:
-        mkdir(path + export_folder_name)
+        mkdir(f_path + export_folder_name)
     except FileExistsError:
         pass
 
-    files = get_files(path)
+    files = get_files(f_path)
+
+    print(files)
     for f in files:
         print(f[0])
     convert2pdf(files)
