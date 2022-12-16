@@ -8,9 +8,11 @@ def date_string(year, month, day):
     return f"{year}%2F{month}%2F{day}"
 
 
-login_asp = "http://192.168.0.35/user/user_login2.asp"
+login_asp = "https://cpa.hosp.ncku.edu.tw/user/user_login2.asp"
 
-update_temp = "http://192.168.0.35/PBT/Body_Temperature_Update.asp"
+#"http://192.168.0.35/user/user_login2.asp"
+
+update_temp = "https://cpa.hosp.ncku.edu.tw/PBT/Body_Temperature_Update.asp"
 
 user_data = {"txt_las110_Value": UserData.ID,
              "userpwd": UserData.PW,
@@ -27,9 +29,9 @@ temp_data = {
     "BT_Data_1": "35.2",
     "BT_KeyinPNo": "966384",
     "BT_Q2": "N",
-    "BT_Q3": "N",
+    # "BT_Q3": "N",
     "BT_Q4": "Y",
-    "BT_Q5": "N",
+    # "BT_Q5": "N",
 }
 session = requests.session()
 response = session.post(login_asp, data=user_data)
@@ -37,13 +39,13 @@ response = session.post(login_asp, data=user_data)
 print(date_string("2020", "02", 3))
 
 # edit here!!
-for d in [1,2,5,6,7,8,9,12,13,14,15,16,18,19,20]:
+for d in [25,26,27,28]:
 
-    t = random.randint(350, 370)
+    t = random.randint(350, 369)
     t = t / 10.0
 
     # edit here
-    temp_data["BT_Date"] = date_string(2021, "07", d)
+    temp_data["BT_Date"] = date_string(2022, "11", d)
 
     temp_data["BT_Data_1"] = t
     response = session.post(update_temp, data=temp_data)
