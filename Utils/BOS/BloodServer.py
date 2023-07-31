@@ -56,6 +56,10 @@ class BloodServer:
         }
         self._token = ""
         self._headers = {}
+		
+        #self._headers["Origin"] = HOST
+        self._headers["User-Agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36"
+        #self._headers["HOST"] ="dh.blood.org.tw"
 
     def login(self, user_id, user_pw):
         """
@@ -66,7 +70,7 @@ class BloodServer:
         self.user['username'] = user_id
         self.user['password'] = user_pw
 
-        response = requests.request("POST", self._loginAPI, data=self.user, verify=False)
+        response = requests.request("POST", self._loginAPI, headers=self._headers, data=self.user, verify=False)
 
         if response.json().get("statusCode") != 1060:
             raise LoginErrorException("Username or password might be wrong!")
@@ -77,7 +81,7 @@ class BloodServer:
 
     def logout(self):
         data = {"access_token": self._token}
-        response = requests.request("POST", self._logoutAPI, data=data, verify=False)
+        response = requests.request("POST", self._logoutAPI, headers=self._headers, data=data, verify=False)
         return response
 
     def check_token(self) -> requests.Response:
@@ -204,7 +208,7 @@ class BloodServer:
         """
         url = self._downloadEDI + f"?bldSupOrdNo={order_number}&access_token={self._token}"
 
-        response = requests.get(url, verify=False)
+        response = requests.get(url, headers=self._headers, verify=False)
         with open(f"{order_number}.txt", "w") as f:
             f.write(response.text)
 
