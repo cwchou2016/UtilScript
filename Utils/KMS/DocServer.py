@@ -53,10 +53,9 @@ class DocServer:
         self._user_data['txtUserName'] = user
         self._user_data['txtPw'] = base64.b64encode(password.encode()).decode()
 
-        self._response = self._session.post(DocServer.login_link, data=self._user_data)
-        soup = self.get_soup()
+        self._response = self._session.post(DocServer.login_link, data=self._user_data, allow_redirects=False)
 
-        if soup.find("a", {"href": "/KM/logout.aspx"}) is None:
+        if self._response.status_code == 200:
             raise LoginFailedException
 
         return self._response
