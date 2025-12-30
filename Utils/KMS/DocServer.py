@@ -1,12 +1,13 @@
 import getpass
 import os
 import shutil
+import base64
 
 import requests
 from bs4 import BeautifulSoup
 
-from .DocException import LoginFailedException, ReadDocException
-from .Document import Document
+from Utils.KMS.DocException import LoginFailedException, ReadDocException
+from Utils.KMS.Document import Document
 
 HOST = "http://kms.hosp.ncku.edu.tw/KM/"
 
@@ -30,7 +31,19 @@ class DocServer:
         self._user_data["__VIEWSTATEGENERATOR"] = soup.find('input', {'id': "__VIEWSTATEGENERATOR"}).get("value")
         self._user_data["__EVENTVALIDATION"] = soup.find('input', {'id': "__EVENTVALIDATION"}).get("value")
         self._user_data['LoginButton'] = soup.find('input', {'id': "LoginButton"}).get("value")
-        self._user_data["txtOpenIdUser"] = ""
+        self._user_data['__RequestVerificationToken'] = soup.find('input', {'name': "__RequestVerificationToken"}).get("value")
+        self._user_data["__VIEWSTATEENCRYPTED"] = soup.find('input', {'id': "__VIEWSTATEENCRYPTED"}).get("value")
+
+        self._user_data['__EVENTTARGET'] = ""
+        self._user_data['__EVENTARGUMENT'] = ""
+
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Referer': self.login_link,  # 有些伺服器會檢查來源
+            'Origin': "http://kms.hosp.ncku.edu.tw/"
+        }
+        self._session.headers.update(headers)
+
 
     def get_soup(self):
         """Get current soup content"""
@@ -38,13 +51,15 @@ class DocServer:
 
     def login(self, user, password):
         self._user_data['txtUserName'] = user
-        self._user_data['txtPassword'] = password
+        self._user_data['txtPw'] = base64.b64encode(password.encode()).decode()
 
         self._response = self._session.post(DocServer.login_link, data=self._user_data)
         soup = self.get_soup()
 
         if soup.find("a", {"href": "/KM/logout.aspx"}) is None:
             raise LoginFailedException
+
+        return self._response
 
     def logout(self):
         self._response = self._session.get(DocServer.logout_link)
