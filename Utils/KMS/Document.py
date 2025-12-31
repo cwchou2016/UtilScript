@@ -93,3 +93,9 @@ class Document:
 
     def get_version(self):
         return self._version
+
+    def __str__(self):
+        return f"Document Name:{self._doc_name}\n" \
+                f"Document ID: {self.get_id()} \n" \
+                f"Version: {self.get_version()} \n" \
+                f"File Name: {self.get_files_link()}"
