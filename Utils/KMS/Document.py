@@ -67,6 +67,7 @@ class Document:
 
         if ver is None:
             self._version = 1
+            return
 
         self._version = ver.get_text()
 
