@@ -13,9 +13,11 @@ class Document:
         """
         self._doc_id = None
         self._version = None
+        self._doc_name = None
         self._soup = soup
         self.files = {}
 
+        self.read_doc_name()
         self.read_files()
         self.read_doc_id()
         self.read_version()
@@ -37,6 +39,15 @@ class Document:
                 self.files[f_name] = None
             else:
                 self.files[f_name] = DocServer.HOST + link.get("href")
+
+    def read_doc_name(self):
+        """
+        Read the document name
+        """
+        tag = self._soup.find("h3", {"class": "title_zh-TW"})
+
+        if tag:
+            self._doc_name = tag.get_text().strip()
 
     def read_doc_id(self):
         """
