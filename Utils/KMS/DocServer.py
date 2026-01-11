@@ -9,7 +9,7 @@ from bs4 import BeautifulSoup
 from Utils.KMS.DocException import LoginFailedException, ReadDocException
 from Utils.KMS.Document import Document
 
-HOST = "http://kms.hosp.ncku.edu.tw/KM/"
+HOST = "https://kms.hosp.ncku.edu.tw/KM/"
 
 
 class DocServer:
@@ -20,6 +20,8 @@ class DocServer:
     logout_link = HOST + "logout.aspx"
     doc_link = HOST + "readdocument.aspx"
     doc_view_link = HOST + "preview.aspx"
+    list_link = HOST + "listfolders.aspx"
+    upload_link = HOST + "upload.aspx"
 
     def __init__(self):
         self._user_data = {}
@@ -39,8 +41,8 @@ class DocServer:
 
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Referer': self.login_link,  # 有些伺服器會檢查來源
-            'Origin': "http://kms.hosp.ncku.edu.tw/"
+            # 'Referer': self.login_link,  # 有些伺服器會檢查來源
+            # 'Origin': "http://kms.hosp.ncku.edu.tw/"
         }
         self._session.headers.update(headers)
 
@@ -124,11 +126,24 @@ class DocServer:
         with open(f"export/{f_name}", "wb") as f:
             f.write(content)
 
-    def create_document(self):
+    def create_document(self, folder_id="104011"):
         """
         Create new document in KM
         """
-        pass
+        upload_url = DocServer.upload_link + f"?folderId={folder_id}"
+        self._response = self._session.get(upload_url)
+        soup = self.get_soup()
+
+        hidden_tags = soup.find_all("input", {"type": "hidden"})
+
+        hidden_param ={}
+
+        for tag in hidden_tags:
+            id_name = tag.get('id')
+            if id_name:
+                hidden_param[id_name] = tag.get('value')
+
+        return soup
 
     def save_draft(self):
         """
