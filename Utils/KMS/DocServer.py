@@ -124,6 +124,30 @@ class DocServer:
         with open(f"export/{f_name}", "wb") as f:
             f.write(content)
 
+    def create_document(self):
+        """
+        Create new document in KM
+        """
+        pass
+
+    def save_draft(self):
+        """
+        Save draft document in KM
+        """
+        pass
+
+    def attach_files(self):
+        """
+        Attach files to a document in KM
+        """
+        pass
+
+    def publish(self):
+        """
+        Publish document in KM
+        """
+        pass
+
 
 if __name__ == "__main__":
     user = input("User:")
