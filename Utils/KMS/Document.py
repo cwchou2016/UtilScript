@@ -117,7 +117,7 @@ class Draft:
         self._p = self.get_folder_id() #folder
         self._propagation= 1
         self._gid = self.get_gid()
-        self._dti = None
+        self._dti = self.get_draft_ticket()
         self._rs = self.get_random_suffix()
         self._dd = "99991231235959"
         self._ad = "17530101000000"
@@ -190,6 +190,21 @@ class Draft:
                 return match.group(1)
 
         raise CreateDocException("GID not found.")
+
+    def get_draft_ticket(self):
+        """
+        return draft ticket
+        """
+        tag = self._soup.find('script', string=re.compile('var draftTicketId'))
+
+        if tag:
+            pattern = r'var draftTicketId\s*=\s*"([^"]+)"'
+            match = re.search(pattern, tag.string, re.DOTALL)
+
+            if match:
+                return match.group(1)
+
+        raise CreateDocException("Draft ticket ID not found.")
 
     def get_payload(self):
         """get payload"""
