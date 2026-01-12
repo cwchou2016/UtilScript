@@ -2,6 +2,7 @@ import json
 import re
 
 from Utils.KMS import DocServer
+from Utils.KMS.DocException import CreateDocException
 
 
 class Document:
@@ -111,7 +112,7 @@ class Draft:
         self._soup = soup
 
         # payload value
-        self._d = None #draftObject
+        self._d = self.get_draft_object() #draftObject
         self._r = [] #relation files
         self._p = None #folder
         self._propagation= 1
@@ -128,6 +129,24 @@ class Draft:
     def parse_draft(self):
         """parse draft object"""
         pass
+
+    def get_draft_object(self) -> dict:
+        """
+        get draft object
+
+        return: draft object
+        """
+        tag = self._soup.find('script', string=re.compile('var draftObj'))
+
+        if tag:
+            pattern = r'var draftObject\s*=\s*(\{.*?\});'
+            match = re.search(pattern, tag.string, re.DOTALL)
+
+            if match:
+                json_str = match.group(1)
+                return json.loads(json_str)
+
+        raise CreateDocException("Draft object not found.")
 
     def get_payload(self):
         """get payload"""
