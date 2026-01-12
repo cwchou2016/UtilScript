@@ -1,3 +1,6 @@
+import json
+import re
+
 from Utils.KMS import DocServer
 
 
@@ -106,11 +109,42 @@ class Draft:
     """Load draft from beatuifulsoup of create document page."""
     def __init__(self, soup):
         self._soup = soup
-        self.draft_obj = None
+
+        # payload value
+        self._d = None #draftObject
+        self._r = [] #relation files
+        self._p = None #folder
+        self._propagation= 1
+        self._gid = None
+        self._dti = None
+        self._rs = None
+        self._dd = "99991231235959"
+        self._ad = "17530101000000"
+        self._usenewdocclass = "false"
+        self._isnewdraft = "false"
+
+        self.parse_draft()
 
     def parse_draft(self):
         """parse draft object"""
         pass
+
+    def get_payload(self):
+        """get payload"""
+        payload = {
+            "gid":self._gid,
+            "rs":self._rs,
+            "p": self._p,
+            "d": self._d, # TODO: change to text format
+            "r": self._r,
+            "ad": self._ad,
+            "dd": self._dd,
+            "dti": self._dti,
+            "usenewdocclass": self._usenewdocclass,
+            "isnewdraft": self._isnewdraft,
+        }
+
+        return payload
 
     def set_title(self, title):
         """set draft title"""
