@@ -124,16 +124,8 @@ class Draft:
         self._usenewdocclass = "false"
         self._isnewdraft = "false"
 
-        self.parse_draft()
-
-    def parse_draft(self):
-        """parse draft object"""
-        pass
-
     def get_draft_object(self) -> dict:
         """
-        get draft object
-
         return: draft object
         """
         tag = self._soup.find('script', string=re.compile('var draftObj'))
@@ -150,8 +142,6 @@ class Draft:
 
     def get_folder_id(self) -> str:
         """
-        get folder id
-
         return folder id
         """
         tag = self._soup.find('script', string=re.compile('var folderId'))
@@ -161,8 +151,7 @@ class Draft:
             match = re.search(pattern, tag.string, re.DOTALL)
 
             if match:
-                json_str = match.group(1)
-                return str(json.loads(json_str))
+                return match.group(1)
 
         raise CreateDocException("Folder ID not found.")
 
@@ -212,7 +201,7 @@ class Draft:
             "gid":self._gid,
             "rs":self._rs,
             "p": self._p,
-            "d": self._d, # TODO: change to text format
+            "d": json.dumps(self._d),
             "r": self._r,
             "ad": self._ad,
             "dd": self._dd,
@@ -229,11 +218,4 @@ class Draft:
 
     def get_title(self):
         """get document title"""
-        pass
-
-    def get_draft_id(self):
-        """get draft id"""
-
-    def get_draft_obj(self):
-        """get draft object"""
         pass
