@@ -116,7 +116,7 @@ class Draft:
         self._r = [] #relation files
         self._p = self.get_folder_id() #folder
         self._propagation= 1
-        self._gid = None
+        self._gid = self.get_gid()
         self._dti = None
         self._rs = self.get_random_suffix()
         self._dd = "99991231235959"
@@ -175,6 +175,21 @@ class Draft:
             return rs
 
         raise CreateDocException("Random suffix not found.")
+
+    def get_gid(self) -> str:
+        """
+        return gid
+        """
+        tag = self._soup.find('script', string=re.compile('gid:'))
+
+        if tag:
+            pattern = r'gid:\s*"([^"]+)"'
+            match = re.search(pattern, tag.string, re.DOTALL)
+
+            if match:
+                return match.group(1)
+
+        raise CreateDocException("GID not found.")
 
     def get_payload(self):
         """get payload"""
