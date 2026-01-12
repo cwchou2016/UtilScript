@@ -100,3 +100,29 @@ class Document:
                 f"Document ID: {self.get_id()} \n" \
                 f"Version: {self.get_version()} \n" \
                 f"File Name: {self.get_files_link()}"
+
+
+class Draft:
+    """Load draft from beatuifulsoup of create document page."""
+    def __init__(self, soup):
+        self._soup = soup
+        self.draft_obj = None
+
+    def parse_draft(self):
+        """parse draft object"""
+        pass
+
+    def set_title(self, title):
+        """set draft title"""
+        pass
+
+    def get_title(self):
+        """get document title"""
+        pass
+
+    def get_draft_id(self):
+        """get draft id"""
+
+    def get_draft_obj(self):
+        """get draft object"""
+        pass
