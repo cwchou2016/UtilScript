@@ -2,11 +2,13 @@ import getpass
 import os
 import shutil
 import base64
+import time
 
 import requests
 from bs4 import BeautifulSoup
+from setuptools.monkey import patch_all
 
-from Utils.KMS.DocException import LoginFailedException, ReadDocException
+from Utils.KMS.DocException import LoginFailedException, ReadDocException, CreateDocException
 from Utils.KMS.Document import Document
 
 HOST = "https://kms.hosp.ncku.edu.tw/KM/"
@@ -22,6 +24,7 @@ class DocServer:
     doc_view_link = HOST + "preview.aspx"
     list_link = HOST + "listfolders.aspx"
     upload_link = HOST + "upload.aspx"
+    create_link = HOST + "createdocument.aspx"
 
     def __init__(self):
         self._user_data = {}
@@ -132,18 +135,53 @@ class DocServer:
         """
         upload_url = DocServer.upload_link + f"?folderId={folder_id}"
         self._response = self._session.get(upload_url)
+        time.sleep(1)
         soup = self.get_soup()
 
-        hidden_tags = soup.find_all("input", {"type": "hidden"})
+        input_tags = soup.find_all("input")
 
         hidden_param ={}
 
-        for tag in hidden_tags:
-            id_name = tag.get('id')
+        for tag in input_tags:
+            id_name = tag.get('name')
             if id_name:
                 hidden_param[id_name] = tag.get('value')
 
-        return soup
+        payload_keys = [
+            "folderId",
+            "__EVENTTARGET",
+            "__EVENTARGUMENT",
+            "__VIEWSTATE",
+            "__VIEWSTATEGENERATOR",
+            "__VIEWSTATEENCRYPTED",
+            "__PREVIOUSPAGE",
+            "__EVENTVALIDATION",
+            "__RequestVerificationToken",
+            "ctl00$cp$lastDocumentClassGroup",
+            "ctl00$cp$lastDocumentClass",
+            "ctl00$cp$defaultDocumentClassUid",
+            "ctl00$cp$defaultDocumentClassDescription",
+            "ctl00$cp$isSingleDocumentClass",
+            "fileToUploadInBasicMultiple",
+            "fileToUploadInBasic",
+            "ctl00$cp$MasterFileName",
+            "ctl00$cp$rdoSource",
+            "ctl00$cp$txtUrl",
+            "ctl00$cp$RandomSuffix"
+        ]
+
+        payload = {}
+        for key in payload_keys:
+            payload[key] = hidden_param.get(key)
+
+        payload['ctl00$cp$lastDocumentClass'] = "1"
+        payload['ctl00$cp$rdoSource'] = 'x'
+
+        post_url = DocServer.create_link + f"?uid={folder_id}"
+        self._response = self._session.post(post_url, data=payload)
+
+        if self._response.status_code != 200:
+            raise CreateDocException("create new document failed")
 
     def save_draft(self):
         """
