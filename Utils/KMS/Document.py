@@ -114,7 +114,7 @@ class Draft:
         # payload value
         self._d = self.get_draft_object() #draftObject
         self._r = [] #relation files
-        self._p = None #folder
+        self._p = self.get_folder_id() #folder
         self._propagation= 1
         self._gid = None
         self._dti = None
@@ -147,6 +147,25 @@ class Draft:
                 return json.loads(json_str)
 
         raise CreateDocException("Draft object not found.")
+
+    def get_folder_id(self) -> str:
+        """
+        get folder id
+
+        return folder id
+        """
+        tag = self._soup.find('script', string=re.compile('var folderId'))
+
+        if tag:
+            pattern = r'var folderId = "(\d+)";'
+            match = re.search(pattern, tag.string, re.DOTALL)
+
+            if match:
+                json_str = match.group(1)
+                return str(json.loads(json_str))
+
+        raise CreateDocException("Folder ID not found.")
+
 
     def get_payload(self):
         """get payload"""
