@@ -118,7 +118,7 @@ class Draft:
         self._propagation= 1
         self._gid = None
         self._dti = None
-        self._rs = None
+        self._rs = self.get_random_suffix()
         self._dd = "99991231235959"
         self._ad = "17530101000000"
         self._usenewdocclass = "false"
@@ -166,6 +166,15 @@ class Draft:
 
         raise CreateDocException("Folder ID not found.")
 
+    def get_random_suffix(self) -> str:
+        """
+        return random suffix
+        """
+        rs = self._soup.find('input', {'name': 'ctl00$cp$RandomSuffix'}).get('value')
+        if rs:
+            return rs
+
+        raise CreateDocException("Random suffix not found.")
 
     def get_payload(self):
         """get payload"""
