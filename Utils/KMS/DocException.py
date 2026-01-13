@@ -10,3 +10,7 @@ class ReadDocException(Exception):
 class CreateDocException(Exception):
     """Raise when document cannot be created"""
     pass
+
+class DocInfoException(Exception):
+    """Raise when document info cannot be read"""
+    pass

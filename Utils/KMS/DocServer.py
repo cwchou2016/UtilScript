@@ -1,13 +1,15 @@
 import getpass
 import json
 import os
+import re
 import shutil
 import base64
 
 import requests
 from bs4 import BeautifulSoup
+from datetime import datetime
 
-from Utils.KMS.DocException import LoginFailedException, ReadDocException, CreateDocException
+from Utils.KMS.DocException import LoginFailedException, ReadDocException, CreateDocException, DocInfoException
 from Utils.KMS.Document import Document, Draft
 
 HOST = "https://kms.hosp.ncku.edu.tw/KM/"
@@ -26,6 +28,7 @@ class DocServer:
     create_link = HOST + "createdocument.aspx"
     service_link = HOST + "ajaxdocumentservice.aspx"
     draft_list_link = HOST + "services/personaldraftservice.aspx"
+    inform_link = HOST + "services/informationservices.aspx"
 
     def __init__(self):
         self._user_data = {}
@@ -115,6 +118,29 @@ class DocServer:
 
         doc = Document(soup)
         return doc
+
+    def get_viewer_by_doc_id(self, doc_id) -> dict:
+        """
+        Return: who has viewed the documents
+        """
+        payload = {
+            'method': 'getdocumenthitbyinfo',
+            'docid': doc_id,
+        }
+
+        response = self._session.get(DocServer.inform_link, data=payload)
+        response_json = json.loads(response.text)
+
+        if not response_json["Success"]:
+            raise DocInfoException(response_json["Message"])
+
+        viewer = {}
+        for people in  response_json['Data']['PageOfResults']:
+
+            view_time = int(re.search(r'\d+', people['MaxCreationDatetime']).group())
+            viewer[people['SubjectInfo']['DisplayName']] = datetime.fromtimestamp(view_time / 1000.0)
+
+        return viewer
 
     def download_view_url(self, url):
         """
