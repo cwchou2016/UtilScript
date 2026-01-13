@@ -144,6 +144,28 @@ class DocServer:
 
         return viewer
 
+    def get_modify_by_doc_id(self, doc_id):
+        """
+        Return last modified datetime of the document
+        """
+        payload = {
+            'method': 'documentversioninfo',
+            'docid': doc_id,
+        }
+
+        response = self._session.get(DocServer.inform_link, data=payload)
+        response_json = json.loads(response.text)
+
+        if not response_json["Success"]:
+            raise DocInfoException(response_json["Message"])
+
+        time_str = response_json['Data'][0]['CreationDatetime']
+
+        last_modified = int(re.search(r'\d+', time_str).group())
+
+        return datetime.fromtimestamp(last_modified / 1000.0)
+
+
     def download_view_url(self, url):
         """
         Download image from online pdf viewer
