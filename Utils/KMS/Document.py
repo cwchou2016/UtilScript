@@ -19,20 +19,22 @@ class Document:
         self._version = None
         self._doc_name = None
         self._soup = soup
-        self.files = {}
 
         self.read_doc_name()
-        self.read_files()
         self.read_doc_id()
         self.read_version()
 
-    def read_files(self):
+    def get_files_link(self) -> dict:
         """
-        Read files of the document
-        """
-        files = self._soup.find_all("div", {"class": "documentmode-file-title"})
+        Get all download links of files if download is available.
 
-        for f in files:
+        :return: dictionary of files with its download links.
+        """
+        files_div = self._soup.find_all("div", {"class": "documentmode-file-title"})
+
+        files ={}
+
+        for f in files_div:
             size_text = f.find("span")
             size_text.extract()
 
@@ -40,9 +42,11 @@ class Document:
             link = self._soup.find("a", {"title": f_name + " "})
 
             if link is None:
-                self.files[f_name] = None
+                files[f_name] = None
             else:
-                self.files[f_name] = DocServer.HOST + link.get("href")
+                files[f_name] = DocServer.HOST + link.get("href")
+
+        return files
 
     def read_doc_name(self):
         """
@@ -75,20 +79,13 @@ class Document:
 
         self._version = ver.get_text()
 
-    def get_files_link(self):
-        """
-        Get all download links of files if download is available.
-        :return: dictionary of files with its download links.
-        """
-        return self.files
-
     def get_view_link(self):
         """
         Generate the links of the preview window.
         :return: dictionary of files with its view links.
         """
         view_links = {}
-        for f in self.files:
+        for f in self.get_files_link():
             view_links[f] = DocServer.DocServer.doc_view_link + \
                             f"?documentid={self.get_id()}&ver={self.get_version()}&filename={f}&type=file"
         return view_links
