@@ -127,7 +127,7 @@ class Draft:
         if self.get_title() == "":
             self.set_title("New File")
 
-        self.fix_payload()
+        self.fix_privilege()
 
     def get_draft_object(self) -> dict:
         """
@@ -227,12 +227,10 @@ class Draft:
         """return document title"""
         return self._d['DocumentAttributes'][1]['Value']['zh-TW']
 
-    def fix_payload(self):
+    def fix_privilege(self):
         """
-        fix payload by adding Infinite field to the subjects, and set Tags to None
+        fix privilege by adding Infinite field to the subjects
         """
 
         for people in self._d['DocumentPrivileges']:
             people['Subject']['Infinite'] = True
-
-        self._d['Tags'] = None
