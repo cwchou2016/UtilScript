@@ -56,6 +56,22 @@ class DocServer:
         """Get current soup content"""
         return BeautifulSoup(self._response.content, "html.parser")
 
+    def get_input_values(self) -> dict:
+        """
+        return a dictionary of all inputs' values
+        """
+        input_tags = self.get_soup().find_all("input")
+
+        inputs = {}
+
+        for tag in input_tags:
+            name = tag.get('name')
+            if name:
+                inputs[name] = tag.get('value')
+
+        return inputs
+
+
     def login(self, user, password):
         self._user_data['txtUserName'] = user
         self._user_data['txtPw'] = base64.b64encode(password.encode()).decode()
@@ -138,16 +154,7 @@ class DocServer:
         upload_url = DocServer.upload_link + f"?folderId={folder_id}"
         self._response = self._session.get(upload_url)
 
-        soup = self.get_soup()
-
-        input_tags = soup.find_all("input")
-
-        hidden_param ={}
-
-        for tag in input_tags:
-            id_name = tag.get('name')
-            if id_name:
-                hidden_param[id_name] = tag.get('value')
+        hidden_param = self.get_input_values()
 
         payload_keys = [
             "folderId",
