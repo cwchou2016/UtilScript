@@ -1,15 +1,16 @@
 import getpass
+import json
 import os
 import shutil
 import base64
 import time
+from http.client import responses
 
 import requests
 from bs4 import BeautifulSoup
-from setuptools.monkey import patch_all
 
 from Utils.KMS.DocException import LoginFailedException, ReadDocException, CreateDocException
-from Utils.KMS.Document import Document
+from Utils.KMS.Document import Document, Draft
 
 HOST = "https://kms.hosp.ncku.edu.tw/KM/"
 
@@ -25,6 +26,7 @@ class DocServer:
     list_link = HOST + "listfolders.aspx"
     upload_link = HOST + "upload.aspx"
     create_link = HOST + "createdocument.aspx"
+    service_link = HOST + "ajaxdocumentservice.aspx"
 
     def __init__(self):
         self._user_data = {}
@@ -135,7 +137,7 @@ class DocServer:
         """
         upload_url = DocServer.upload_link + f"?folderId={folder_id}"
         self._response = self._session.get(upload_url)
-        time.sleep(1)
+
         soup = self.get_soup()
 
         input_tags = soup.find_all("input")
@@ -183,11 +185,25 @@ class DocServer:
         if self._response.status_code != 200:
             raise CreateDocException("create new document failed")
 
-    def save_draft(self):
+        draft = Draft(self.get_soup())
+        self.save_draft(draft)
+
+    def save_draft(self, draft: Draft):
         """
         Save draft document in KM
         """
-        pass
+        url = DocServer.service_link + "?cmd=draft"
+
+        payload = draft.get_payload()
+        self._response = self._session.post(url, data=json.dumps(payload))
+
+        if self._response.status_code != 200:
+            raise CreateDocException("Post request failed when saving draft")
+
+        response = json.loads(self._response.text)
+
+        if not response["Success"]:
+            raise CreateDocException("Saving draft is not successful")
 
     def attach_files(self):
         """
