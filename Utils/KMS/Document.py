@@ -15,11 +15,7 @@ class Document:
         """
         :param soup: BeautifulSoup of document page.
         """
-        self._doc_id = None
         self._soup = soup
-
-
-        self.read_doc_id()
 
     def get_files_link(self) -> dict:
         """
@@ -56,16 +52,6 @@ class Document:
 
         raise ReadDocException("Document name not found.")
 
-    def read_doc_id(self):
-        """
-        Read document's id
-        """
-        id_tag = self._soup.find("form", {"name": "aspnetForm"})
-
-        if id_tag is not None:
-            doc_id = id_tag.get("action").split("=")[1]
-            self._doc_id = doc_id
-
     def get_view_link(self):
         """
         Generate the links of the preview window.
@@ -78,7 +64,15 @@ class Document:
         return view_links
 
     def get_id(self):
-        return self._doc_id
+        """
+        Return: the document ID
+        """
+        id_tag = self._soup.find("form", {"name": "aspnetForm"})
+
+        if id_tag is not None:
+            return id_tag.get("action").split("=")[1]
+
+        raise ReadDocException("Document ID not found.")
 
     def get_version(self):
         """
