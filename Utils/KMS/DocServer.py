@@ -3,8 +3,6 @@ import json
 import os
 import shutil
 import base64
-import time
-from http.client import responses
 
 import requests
 from bs4 import BeautifulSoup
@@ -31,18 +29,7 @@ class DocServer:
     def __init__(self):
         self._user_data = {}
         self._session = requests.session()
-        self._response = self._session.get(DocServer.login_link)
-
-        soup = self.get_soup()
-        self._user_data["__VIEWSTATE"] = soup.find('input', {'id': "__VIEWSTATE"}).get("value")
-        self._user_data["__VIEWSTATEGENERATOR"] = soup.find('input', {'id': "__VIEWSTATEGENERATOR"}).get("value")
-        self._user_data["__EVENTVALIDATION"] = soup.find('input', {'id': "__EVENTVALIDATION"}).get("value")
-        self._user_data['LoginButton'] = soup.find('input', {'id': "LoginButton"}).get("value")
-        self._user_data['__RequestVerificationToken'] = soup.find('input', {'name': "__RequestVerificationToken"}).get("value")
-        self._user_data["__VIEWSTATEENCRYPTED"] = soup.find('input', {'id': "__VIEWSTATEENCRYPTED"}).get("value")
-
-        self._user_data['__EVENTTARGET'] = ""
-        self._user_data['__EVENTARGUMENT'] = ""
+        self._response = None
 
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -50,7 +37,6 @@ class DocServer:
             # 'Origin': "http://kms.hosp.ncku.edu.tw/"
         }
         self._session.headers.update(headers)
-
 
     def get_soup(self):
         """Get current soup content"""
@@ -72,16 +58,36 @@ class DocServer:
         return inputs
 
 
-    def login(self, user, password):
-        self._user_data['txtUserName'] = user
-        self._user_data['txtPw'] = base64.b64encode(password.encode()).decode()
+    def login(self, user, password) -> None:
+        self._response = self._session.get(DocServer.login_link)
 
-        self._response = self._session.post(DocServer.login_link, data=self._user_data, allow_redirects=False)
+        input_values = self.get_input_values()
+
+        payload_keys = [
+            "__LASTFOCUS",
+            "__VIEWSTATE",
+            "__VIEWSTATEGENERATOR",
+            "__EVENTTARGET",
+            "__EVENTARGUMENT",
+            "__VIEWSTATEENCRYPTED",
+            "__EVENTVALIDATION",
+            "__RequestVerificationToken",
+            "txtUserName",
+            "txtPw",
+            "LoginButton"
+        ]
+
+        payload = {}
+        for key in payload_keys:
+            payload[key] = input_values[key]
+
+        payload['txtUserName'] = user
+        payload['txtPw'] = base64.b64encode(password.encode()).decode()
+
+        self._response = self._session.post(DocServer.login_link, data=payload, allow_redirects=False)
 
         if self._response.status_code == 200:
             raise LoginFailedException
-
-        return self._response
 
     def logout(self):
         self._response = self._session.get(DocServer.logout_link)
