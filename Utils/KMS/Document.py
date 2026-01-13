@@ -124,6 +124,11 @@ class Draft:
         self._usenewdocclass = "false"
         self._isnewdraft = "false"
 
+        if self.get_title() == "":
+            self.set_title("New File")
+
+        self.fix_payload()
+
     def get_draft_object(self) -> dict:
         """
         return: draft object
@@ -201,21 +206,33 @@ class Draft:
             "gid":self._gid,
             "rs":self._rs,
             "p": self._p,
-            "d": json.dumps(self._d),
+            "d": json.dumps(self._d, ensure_ascii=False),
             "r": self._r,
             "ad": self._ad,
             "dd": self._dd,
             "dti": self._dti,
             "usenewdocclass": self._usenewdocclass,
             "isnewdraft": self._isnewdraft,
+            "propagation": self._propagation,
         }
 
         return payload
 
     def set_title(self, title):
         """set draft title"""
-        pass
+        self._d['DocumentAttributes'][1]['Value']['zh-TW'] = title
+        self._d['DocumentAttributes'][0]['Value']['zh-TW'] = "總院"
 
     def get_title(self):
-        """get document title"""
-        pass
+        """return document title"""
+        return self._d['DocumentAttributes'][1]['Value']['zh-TW']
+
+    def fix_payload(self):
+        """
+        fix payload by adding Infinite field to the subjects, and set Tags to None
+        """
+
+        for people in self._d['DocumentPrivileges']:
+            people['Subject']['Infinite'] = True
+
+        self._d['Tags'] = None
