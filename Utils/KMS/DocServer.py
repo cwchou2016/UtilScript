@@ -25,6 +25,7 @@ class DocServer:
     upload_link = HOST + "upload.aspx"
     create_link = HOST + "createdocument.aspx"
     service_link = HOST + "ajaxdocumentservice.aspx"
+    draft_list_link = HOST + "services/personaldraftservice.aspx"
 
     def __init__(self):
         self._user_data = {}
@@ -200,6 +201,19 @@ class DocServer:
 
         draft = Draft(self.get_soup())
         self.save_draft(draft)
+
+    def show_personal_drafts(self) -> list:
+        """
+        return dictionary of drafts' meta data
+        """
+        payload = {
+            'cmd': 'draftlist',
+            'pageIndex': 0,
+            'pageSize': 1000,
+        }
+        self._response = self._session.get(DocServer.draft_list_link, data=payload)
+
+        return json.loads(self._response.text).get('Data').get('PageOfResults')
 
     def save_draft(self, draft: Draft):
         """
