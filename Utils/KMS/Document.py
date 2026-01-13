@@ -2,7 +2,7 @@ import json
 import re
 
 from Utils.KMS import DocServer
-from Utils.KMS.DocException import CreateDocException
+from Utils.KMS.DocException import CreateDocException, ReadDocException
 
 
 class Document:
@@ -16,10 +16,9 @@ class Document:
         :param soup: BeautifulSoup of document page.
         """
         self._doc_id = None
-        self._doc_name = None
         self._soup = soup
 
-        self.read_doc_name()
+
         self.read_doc_id()
 
     def get_files_link(self) -> dict:
@@ -46,14 +45,16 @@ class Document:
 
         return files
 
-    def read_doc_name(self):
+    def get_name(self):
         """
-        Read the document name
+        Return: Name of the document
         """
         tag = self._soup.find("h3", {"class": "title_zh-TW"})
 
         if tag:
-            self._doc_name = tag.get_text().strip()
+            return tag.get_text().strip()
+
+        raise ReadDocException("Document name not found.")
 
     def read_doc_id(self):
         """
@@ -91,7 +92,7 @@ class Document:
         return ver.get_text()
 
     def __str__(self):
-        return f"Document Name:{self._doc_name}\n" \
+        return f"Document Name:{self.get_name()}\n" \
                 f"Document ID: {self.get_id()} \n" \
                 f"Version: {self.get_version()} \n" \
                 f"File Name: {self.get_files_link()}"
