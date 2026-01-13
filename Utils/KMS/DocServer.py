@@ -126,6 +126,8 @@ class DocServer:
         payload = {
             'method': 'getdocumenthitbyinfo',
             'docid': doc_id,
+            'ps': 1000,
+            'pi': 0
         }
 
         response = self._session.get(DocServer.inform_link, data=payload)
