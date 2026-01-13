@@ -11,7 +11,7 @@ class Document:
 
     """
 
-    def __init__(self, soup):
+    def __init__(self, soup) -> None:
         """
         :param soup: BeautifulSoup of document page.
         """
@@ -41,7 +41,7 @@ class Document:
 
         return files
 
-    def get_name(self):
+    def get_name(self) ->str:
         """
         Return: Name of the document
         """
@@ -52,7 +52,7 @@ class Document:
 
         raise ReadDocException("Document name not found.")
 
-    def get_view_link(self):
+    def get_view_link(self) ->dict:
         """
         Generate the links of the preview window.
         :return: dictionary of files with its view links.
@@ -63,7 +63,7 @@ class Document:
                             f"?documentid={self.get_id()}&ver={self.get_version()}&filename={f}&type=file"
         return view_links
 
-    def get_id(self):
+    def get_id(self) ->str:
         """
         Return: the document ID
         """
@@ -74,18 +74,18 @@ class Document:
 
         raise ReadDocException("Document ID not found.")
 
-    def get_version(self):
+    def get_version(self) -> str:
         """
         Return: the latest version of the document
         """
         ver = self._soup.find("span", {"id": "ctl00_cp_latestVersion"})
 
         if ver is None:
-            return 1
+            return str(1)
 
         return ver.get_text()
 
-    def __str__(self):
+    def __str__(self) ->str:
         return f"Document Name:{self.get_name()}\n" \
                 f"Document ID: {self.get_id()} \n" \
                 f"Version: {self.get_version()} \n" \
