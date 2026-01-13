@@ -16,13 +16,11 @@ class Document:
         :param soup: BeautifulSoup of document page.
         """
         self._doc_id = None
-        self._version = None
         self._doc_name = None
         self._soup = soup
 
         self.read_doc_name()
         self.read_doc_id()
-        self.read_version()
 
     def get_files_link(self) -> dict:
         """
@@ -67,18 +65,6 @@ class Document:
             doc_id = id_tag.get("action").split("=")[1]
             self._doc_id = doc_id
 
-    def read_version(self):
-        """
-        Read the latest version number
-        """
-        ver = self._soup.find("span", {"id": "ctl00_cp_latestVersion"})
-
-        if ver is None:
-            self._version = 1
-            return
-
-        self._version = ver.get_text()
-
     def get_view_link(self):
         """
         Generate the links of the preview window.
@@ -94,7 +80,15 @@ class Document:
         return self._doc_id
 
     def get_version(self):
-        return self._version
+        """
+        Return: the latest version of the document
+        """
+        ver = self._soup.find("span", {"id": "ctl00_cp_latestVersion"})
+
+        if ver is None:
+            return 1
+
+        return ver.get_text()
 
     def __str__(self):
         return f"Document Name:{self._doc_name}\n" \
